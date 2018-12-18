@@ -5,6 +5,13 @@ function MyListItem(commentsPostUrl, teams) {
     this.streamPostUrl = null;
 }
 
+let postList = this.document.getElementById("posts");
+
+document.getElementById("refreshBtn").addEventListener('click', function() {
+    while(postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
+    browser.storage.local.remove(["time","posts"]).then(onLoaded, onError);
+});
+
 // Remove accented characters
 // Change to lower case
 // Trim
@@ -15,7 +22,6 @@ function normalize(title) {
 }
 
 function displayCommentStreamPost(item) {
-    let postList = this.document.getElementById("posts");
     let postElement = this.document.createElement('li');
     postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
 
@@ -38,6 +44,7 @@ function displayStreamPost(item) {
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
+    console.log("Loading from reddit");
     const r = new snoowrap({
         userAgent: this.navigator.userAgent,
         clientId: clientId,
@@ -55,7 +62,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     );
 
     function forEachLoad(posts, count) {
-        console.log("first post on page " + count + " is " + posts[0].title);
+        //console.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
             if (!element || !isMatchPost(element.title)) continue;
 
@@ -79,10 +86,10 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
 }
 
 function loadFromStorage() {
+    console.log("Loading from storage");
     browser.storage.local.get("posts").then(
         results => {
             let parsed = JSON.parse(results.posts);
-            console.log(parsed.length);
             for (let i = 0; i < parsed.length; i++) {
                 let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
                 item.listElement = displayCommentStreamPost(item);

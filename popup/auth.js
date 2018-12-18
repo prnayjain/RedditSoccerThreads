@@ -6,7 +6,9 @@ let COOKIE_NAME = "tokens"
 
 let authBtn = document.getElementById("authBtn");
 
-window.addEventListener('load', function () {
+window.addEventListener('load', onLoaded);
+
+function onLoaded() {
     authBtn.style.visibility = 'hidden';
     browser.cookies.get({
         url: COOKIE_URL,
@@ -22,7 +24,7 @@ window.addEventListener('load', function () {
         console.log(error);
         authBtn.style.visibility = 'visible';
     });
-});
+};
 
 authBtn.addEventListener("click", function () {
     let RANDOM_STRING = Math.random().toString(36).substring(2);
@@ -52,8 +54,6 @@ authBtn.addEventListener("click", function () {
                     let responseObject = JSON.parse(XHR.response);
                     let btn = document.getElementById("authBtn");
                     btn.style.visibility = 'hidden';
-                    console.log(CLIENT_ID);
-                    console.log(responseObject);
 
                     browser.cookies.set({
                         url: COOKIE_URL,
