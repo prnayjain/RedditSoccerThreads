@@ -8,6 +8,7 @@
   
     "permissions": [
       "identity",
+      "cookies",
       "https://www.reddit.com/api/v1/access_token",
       "https://oauth.reddit.com/*"
     ],

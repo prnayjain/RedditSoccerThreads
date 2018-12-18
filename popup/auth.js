@@ -1,6 +1,30 @@
 let CLIENT_ID = config.clientId;
 let REDIRECT_URI = "http://lvh.me"
-document.getElementById("authBtn").addEventListener("click", function () {
+
+let COOKIE_URL = "https://oauth.reddit.com/"
+let COOKIE_NAME = "tokens"
+
+let authBtn = document.getElementById("authBtn");
+
+window.addEventListener('load', function() {
+    authBtn.style.visibility = 'hidden';
+    browser.cookies.get({
+        url: COOKIE_URL,
+        name: COOKIE_NAME
+    }).then(cookie => {
+        if (cookie) {
+            cookieVal = JSON.parse(cookie.value)
+            loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
+        } else {
+            authBtn.style.visibility = 'visible';
+        }
+    }, error => {
+        console.log(error);
+        authBtn.style.visibility = 'visible';  
+    });
+});
+
+authBtn.addEventListener("click", function () {
     let RANDOM_STRING = Math.random().toString(36).substring(2);
     let authorize = browser.identity.launchWebAuthFlow(
         {
@@ -36,6 +60,20 @@ document.getElementById("authBtn").addEventListener("click", function () {
                     btn.style.visibility = 'hidden';
                     console.log(CLIENT_ID);
                     console.log(responseObject);
+
+                    browser.cookies.set({
+                        url: COOKIE_URL,
+                        name: COOKIE_NAME,
+                        value: JSON.stringify({
+                            access_token: responseObject["access_token"],
+                            refresh_token: responseObject["refresh_token"]
+                        })
+                    }).then(result => {},
+                        error => {
+                        console.log(error);
+                        alert("Couldnt save tokens");
+                    });
+
                     loadPosts(CLIENT_ID, responseObject["access_token"], responseObject["refresh_token"]);
                 });
 
