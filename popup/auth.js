@@ -7,9 +7,8 @@ let COOKIE_NAME = "tokens"
 let authBtn = document.getElementById("authBtn");
 
 window.addEventListener('load', onLoaded);
-
 function onLoaded() {
-    authBtn.style.visibility = 'hidden';
+    authBtn.classList.add("hidden");
     browser.cookies.get({
         url: COOKIE_URL,
         name: COOKIE_NAME
@@ -18,11 +17,11 @@ function onLoaded() {
             cookieVal = JSON.parse(cookie.value)
             loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
         } else {
-            authBtn.style.visibility = 'visible';
+            authBtn.classList.remove("hidden");
         }
     }, error => {
         console.log(error);
-        authBtn.style.visibility = 'visible';
+        authBtn.classList.remove("hidden");
     });
 };
 

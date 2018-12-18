@@ -5,7 +5,11 @@
     "version": "1.0",
   
     "description": "Access current soccer posts from reddit",
-  
+    
+    "icons": {
+      "48": "icons/icon.png"
+    },
+
     "permissions": [
       "identity",
       "cookies",
@@ -16,6 +20,7 @@
   
     "browser_action": {
       "default_title": "SSS",
-      "default_popup": "popup/index.html"
+      "default_popup": "popup/index.html",
+      "default_icon": "icons/icon.png"
     }
   }

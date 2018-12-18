@@ -6,7 +6,6 @@ function MyListItem(commentsPostUrl, teams) {
 }
 
 let postList = this.document.getElementById("posts");
-
 document.getElementById("refreshBtn").addEventListener('click', function() {
     while(postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
     browser.storage.local.remove(["time","posts"]).then(onLoaded, onError);
@@ -23,11 +22,11 @@ function normalize(title) {
 
 function displayCommentStreamPost(item) {
     let postElement = this.document.createElement('li');
-    postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
+    //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
 
     let anchor = document.createElement('a');
     anchor.setAttribute("href", item.commentsPostUrl);
-    anchor.text = "Comments";
+    anchor.text = item.teams[0] + " | " + item.teams[1] + " ";
 
     postElement.appendChild(anchor);
     postList.appendChild(postElement);
@@ -80,7 +79,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
                 onError
             );
         } else {
-            loadStreamLinks(r, listItems);
+            if (config.loadStreams) loadStreamLinks(r, listItems);
         }
     }
 }
@@ -93,7 +92,7 @@ function loadFromStorage() {
             for (let i = 0; i < parsed.length; i++) {
                 let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
                 item.listElement = displayCommentStreamPost(item);
-                displayStreamPost(item);
+                if (config.loadStreams) displayStreamPost(item);
             }
         },
         onError
