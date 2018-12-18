@@ -9,6 +9,7 @@
     "permissions": [
       "identity",
       "cookies",
+      "storage",
       "https://www.reddit.com/api/v1/access_token",
       "https://oauth.reddit.com/*"
     ],

@@ -1,20 +1,9 @@
-function MyListItem(listElement, commentsPostUrl, teams) {
-    this.listElement = listElement;
+function MyListItem(commentsPostUrl, teams) {
+    this.listElement = null;
     this.commentsPostUrl = commentsPostUrl;
     this.teams = teams;
-    streamPostUrl = null;
+    this.streamPostUrl = null;
 }
-
-// class RedditPost {
-//     //public
-//     url;
-//     teams;
-
-//     constructor(url, teams) {
-//         this.url = url;
-//         this.teams = teams;
-//     }
-// }
 
 // Remove accented characters
 // Change to lower case
@@ -25,8 +14,46 @@ function normalize(title) {
         .toLowerCase().trim();
 }
 
-function loadPosts(clientId, accessToken, refreshToken) {
+function displayCommentStreamPost(item) {
     let postList = this.document.getElementById("posts");
+    let postElement = this.document.createElement('li');
+    postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
+
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.commentsPostUrl);
+    anchor.text = "Comments";
+
+    postElement.appendChild(anchor);
+    postList.appendChild(postElement);
+    return postElement;
+}
+
+function displayStreamPost(item) {
+    if (!item.streamPostUrl) return;
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.streamPostUrl);
+    anchor.text = "Streams";
+    item.listElement.append(" ");
+    item.listelem.appendChild(anchor);
+}
+
+async function loadPosts(clientId, accessToken, refreshToken) {
+    let lastTime = await browser.storage.local.get("time");
+    if (lastTime && (new Date().getTime() - lastTime.time) < 300 * 1000 /*5 mins*/) {
+        browser.storage.local.get("posts").then(
+            results => {
+                let parsed = JSON.parse(results.posts);
+                console.log(parsed.length);
+                for(let i = 0; i < parsed.length; i++) {
+                    let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
+                    item.listElement = displayCommentStreamPost(item);
+                    displayStreamPost(item);
+                }
+            },
+            onError
+        );
+        return;
+    }
 
     const r = new snoowrap({
         userAgent: this.navigator.userAgent,
@@ -39,9 +66,10 @@ function loadPosts(clientId, accessToken, refreshToken) {
 
     let listItems = [];
 
-    r.getSubreddit('soccer').getNew().then(posts => {
-        forEachLoad(posts, 1);
-    });
+    r.getSubreddit('soccer').getNew().then(
+        posts => forEachLoad(posts, 1),
+        onError
+    );
 
     function forEachLoad(posts, count) {
         console.log("first post on page " + count + " is " + posts[0].title);
@@ -49,28 +77,18 @@ function loadPosts(clientId, accessToken, refreshToken) {
             if (!element || !isMatchPost(element.title)) continue;
 
             let idx = element.url.indexOf("reddit") + 6;
-            let streamUrl = element.url.substr(0, idx) + "-stream" + element.url.substr(idx);
+            let commentsPostUrl = element.url.substr(0, idx) + "-stream" + element.url.substr(idx);
             let title = normalize(element.title);
             let teams = getTeams(title);
-
-            let postElement = this.document.createElement('li');
-            //postElement.id = "Match " + (listItems.length + 1);
-            postElement.textContent = teams[0] + " | " + teams[1] + " ";
-
-            let anchor = document.createElement('a');
-            anchor.setAttribute("href", streamUrl);
-            anchor.text = "Comments";
-
-            postElement.appendChild(anchor);
-            postList.appendChild(postElement);
-
-            listItems.push(new MyListItem(postElement, streamUrl, teams));
+            let item = new MyListItem(commentsPostUrl, teams);
+            item.postElement = displayCommentStreamPost(item);
+            listItems.push(item);
         }
-        if (count < 4) {
+        if (count < 6) {
             posts.fetchMore({ "amount": 25, "append": false }).then(
                 newposts => forEachLoad(newposts, count + 1),
-                error => console.log(error)
-                );
+                onError
+            );
         } else {
             setStreamLinks(r, listItems);
         }
@@ -82,24 +100,40 @@ function setStreamLinks(r, listItems) {
     for (let i = 0; i < listItems.length; i++) {
         found.push(false);
     }
-    r.getSubreddit('soccerstreams').getNew().then(posts => {
-        for (const element of posts) {
-            for (let i = 0; i < listItems.length; i++) {
-                if (found[i]) continue;
-                let teams = listItems[i].teams;
-                let title = normalize(element.title);
-                if (title.includes(teams[0]) && title.includes(teams[1])) {
-                    let anchor = document.createElement('a');
-                    anchor.setAttribute("href", element.url);
-                    anchor.text = "Streams";
-                    listItems[i].listElement.append(" ");
-                    listItems[i].listelem.appendChild(anchor);
-                    listItems[i].streamPostUrl = element.url;
-                    found[i] = true;
+    r.getSubreddit('soccerstreams').getNew().then(
+        posts => {
+            for (const element of posts) {
+                for (let i = 0; i < listItems.length; i++) {
+                    if (found[i]) continue;
+                    let teams = listItems[i].teams;
+                    let title = normalize(element.title);
+                    if (title.includes(teams[0]) && title.includes(teams[1])) {
+                        listItems[i].streamPostUrl = element.url;
+                        found[i] = true;
+                        displayCommentStreamPost(listItems[i]);
+                    }
                 }
             }
-        }
-    });
+            setInStorage(listItems);
+        },
+        onError);
+}
+
+function setInStorage(listItems) {
+    browser.storage.local.set({ time: new Date().getTime() });
+    browser.storage.local.set({
+        posts: JSON.stringify(listItems, function replacer(key, value) {
+            return (key == "listElement") ? undefined : value;
+        })
+    }).then(
+        () => {
+            console.log("Storage done"),
+                onError
+        });
+}
+
+function onError(error) {
+    console.log(error);
 }
 
 function getTeams(title) {
