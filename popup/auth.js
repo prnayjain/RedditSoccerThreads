@@ -6,7 +6,7 @@ let COOKIE_NAME = "tokens"
 
 let authBtn = document.getElementById("authBtn");
 
-window.addEventListener('load', function() {
+window.addEventListener('load', function () {
     authBtn.style.visibility = 'hidden';
     browser.cookies.get({
         url: COOKIE_URL,
@@ -20,7 +20,7 @@ window.addEventListener('load', function() {
         }
     }, error => {
         console.log(error);
-        authBtn.style.visibility = 'visible';  
+        authBtn.style.visibility = 'visible';
     });
 });
 
@@ -40,19 +40,13 @@ authBtn.addEventListener("click", function () {
     );
     authorize.then(
         url => {
-            console.log("I got the code!")
+            console.log("I got the code!");
             let state = url.slice(url.indexOf("state") + 6, url.indexOf("&"));
             if (state == RANDOM_STRING) {
                 let code = url.substr(url.lastIndexOf("=") + 1);
 
                 console.log("going to get access token");
                 let XHR = new XMLHttpRequest();
-
-                // let urlEncodedDataPairs = [];
-                // urlEncodedDataPairs.push('grant_type', 'authorization_code');
-                // urlEncodedDataPairs.push('code', code);
-                // urlEncodedDataPairs.push('redirect_uri', REDIRECT_URI);
-
                 XHR.addEventListener('load', event => {
                     console.log("got access token");
                     let responseObject = JSON.parse(XHR.response);
@@ -68,11 +62,11 @@ authBtn.addEventListener("click", function () {
                             access_token: responseObject["access_token"],
                             refresh_token: responseObject["refresh_token"]
                         })
-                    }).then(result => {},
+                    }).then(result => { },
                         error => {
-                        console.log(error);
-                        alert("Couldnt save tokens");
-                    });
+                            console.log("Couldnt save tokens");
+                            console.log(error);
+                        });
 
                     loadPosts(CLIENT_ID, responseObject["access_token"], responseObject["refresh_token"]);
                 });
@@ -92,7 +86,7 @@ authBtn.addEventListener("click", function () {
                     '&redirect_uri=' + REDIRECT_URI;
                 XHR.send(urlEncodedData);
             } else {
-                alert("state parameter was not same");
+                console.log("state parameter was not same");
             }
         },
         console.log
