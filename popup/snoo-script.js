@@ -1,87 +1,120 @@
+function MyListItem(listElement, commentsPostUrl, teams) {
+    this.listElement = listElement;
+    this.commentsPostUrl = commentsPostUrl;
+    this.teams = teams;
+    streamPostUrl = null;
+}
+
+// class RedditPost {
+//     //public
+//     url;
+//     teams;
+
+//     constructor(url, teams) {
+//         this.url = url;
+//         this.teams = teams;
+//     }
+// }
+
+// Remove accented characters
+// Change to lower case
+// Trim
 function normalize(title) {
     return title.normalize('NFD')
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase().trim();
 }
 
-function isMatchPost(post) {
-    if (!post || !post.title) return false;
-    title = normalize(post.title);
-    return (title.indexOf("match thread") == 0) && /*!title.includes('request') &&*/ title.includes('vs');
-}
-
-let postList = this.document.getElementById("posts");
-
-//window.addEventListener("load", function() {
 function loadPosts(clientId, accessToken, refreshToken) {
+    let postList = this.document.getElementById("posts");
+
     const r = new snoowrap({
         userAgent: this.navigator.userAgent,
-        clientId: "hdGbtiI3sBPzjw",//clientId,
-        clientSecret: "",
+        clientId: clientId,
         accessToken: accessToken,
         refreshToken: refreshToken
     });
-    r.config({debug: true});
-    let matches = [];    
+
+    r.config({ debug: config.debug });
+
+    let listItems = [];
 
     r.getSubreddit('soccer').getNew().then(posts => {
         forEachLoad(posts, 1);
     });
 
     function forEachLoad(posts, count) {
-        //console.log("First post of page " + count + " " + posts[0].title);
+        console.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
-            if (!isMatchPost(element)) continue;
-            this.console.log(element.title);
-            let post = this.document.createElement('li');
-            post.id = "Match " + (matches.length+1);
-            title = normalize(element.title);
-            let teams = getTeams(title.toLowerCase());
-            matches.push(teams);
-            post.textContent = /*title + "\nTeams: " +*/
-                teams[0] + " | " + teams[1] + " ";
-            let anchor = document.createElement('a');
+            if (!element || !isMatchPost(element.title)) continue;
+
             let idx = element.url.indexOf("reddit") + 6;
             let streamUrl = element.url.substr(0, idx) + "-stream" + element.url.substr(idx);
+            let title = normalize(element.title);
+            let teams = getTeams(title);
+
+            let postElement = this.document.createElement('li');
+            //postElement.id = "Match " + (listItems.length + 1);
+            postElement.textContent = teams[0] + " | " + teams[1] + " ";
+
+            let anchor = document.createElement('a');
             anchor.setAttribute("href", streamUrl);
             anchor.text = "Comments";
-            post.appendChild(anchor);
-            postList.appendChild(post);
+
+            postElement.appendChild(anchor);
+            postList.appendChild(postElement);
+
+            listItems.push(new MyListItem(postElement, streamUrl, teams));
         }
         if (count < 4) {
-            posts.fetchMore({ "amount": 25, "append": false }).then(newposts => forEachLoad(newposts, count + 1),
-                error => console.log(error)).catch(error => console.log("Thrown " + error));
+            posts.fetchMore({ "amount": 25, "append": false }).then(
+                newposts => forEachLoad(newposts, count + 1),
+                error => console.log(error)
+                );
         } else {
-            setStreamLinks(r, matches);
+            setStreamLinks(r, listItems);
         }
     }
 }
 
-function setStreamLinks(r, matches) {
+function setStreamLinks(r, listItems) {
     let found = [];
-    for (let i = 0; i < matches.length; i++) {
+    for (let i = 0; i < listItems.length; i++) {
         found.push(false);
     }
     r.getSubreddit('soccerstreams').getNew().then(posts => {
         for (const element of posts) {
-            for (let i = 0; i < matches.length; i++) {
+            for (let i = 0; i < listItems.length; i++) {
                 if (found[i]) continue;
-                let match = matches[i];
-                let team1 = match[0];
-                let team2 = match[1];
-                title = normalize(element.title);
-                if (true || (title.includes(team1) && title.includes(team2))) {
-                    let listelem = document.getElementById("Match " + (i + 1));
+                let teams = listItems[i].teams;
+                let title = normalize(element.title);
+                if (title.includes(teams[0]) && title.includes(teams[1])) {
                     let anchor = document.createElement('a');
                     anchor.setAttribute("href", element.url);
                     anchor.text = "Streams";
-                    listelem.append(" ");
-                    listelem.appendChild(anchor);
+                    listItems[i].listElement.append(" ");
+                    listItems[i].listelem.appendChild(anchor);
+                    listItems[i].streamPostUrl = element.url;
                     found[i] = true;
                 }
             }
         }
     });
+}
+
+function getTeams(title) {
+    return [getTeam1(title), getTeam2(title)];
+}
+
+// Functions below assume title follows the pattern
+// "Match thread: 'Team 1' vs. 'Team2' [League Name]"
+
+function isMatchPost(postTitle) {
+    if (!postTitle) return false;
+    postTitle = normalize(postTitle);
+    return (postTitle.indexOf("match thread") == 0) &&
+        /*!postTitle.includes('request') &&*/
+        postTitle.includes('vs');
 }
 
 function getTeam1(title) {
@@ -101,7 +134,7 @@ function getTeam2(title) {
     // let tmp = title.split("vs");
     // if (tmp.length < 2) return "None";
     // return tmp[1].trim();
-    
+
     let tmp = title.split("vs");
     if (tmp.length < 2) return "None";
     tmp = tmp[1].split("[");
@@ -109,8 +142,4 @@ function getTeam2(title) {
     tmp = tmp[0].trim();
     if (tmp[0] == '.') tmp = tmp.substr(1);
     return tmp.trim();
-}
-
-function getTeams(title) {
-    return [getTeam1(title), getTeam2(title)];
 }
