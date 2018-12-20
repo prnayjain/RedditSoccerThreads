@@ -1,26 +1,31 @@
 {
-
-    "manifest_version": 2,
-    "name": "SSS",
-    "version": "1.0",
-  
-    "description": "Access current soccer posts from reddit",
-    
-    "icons": {
-      "48": "icons/icon.png"
-    },
-
-    "permissions": [
-      "identity",
-      "cookies",
-      "storage",
-      "https://www.reddit.com/api/v1/access_token",
-      "https://oauth.reddit.com/*"
-    ],
-  
-    "browser_action": {
-      "default_title": "SSS",
-      "default_popup": "popup/index.html",
-      "default_icon": "icons/icon.png"
+  "manifest_version": 2,
+  "name": "SSS",
+  "version": "1.0",
+  "description": "Access current soccer posts from reddit",
+  "icons": {
+    "48": "icons/icon.png"
+  },
+  "permissions": [
+    "identity",
+    "cookies",
+    "storage",
+    "tabs",
+    "https://www.reddit.com/api/v1/access_token",
+    "https://oauth.reddit.com/*"
+  ],
+  "browser_action": {
+    "default_title": "SSS",
+    "default_popup": "popup/index.html",
+    "default_icon": "icons/icon.png"
+  },
+  "background" : {
+    "scripts": ["bg.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{73310ffe-a76a-48f5-bc80-ab1311773dcf}",
+      "strict_max_version": "64.*"
     }
   }
+}

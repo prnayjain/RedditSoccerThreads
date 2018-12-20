@@ -1,3 +1,35 @@
+let bgPage = browser.extension.getBackgroundPage();
+let config = bgPage.config;
+let CLIENT_ID = config.clientId;
+let COOKIE_URL = config.cookieUrl;
+let COOKIE_NAME = config.cookieName;
+
+let authBtn = document.getElementById("authBtn");
+
+window.addEventListener('load', onLoaded);
+function onLoaded() {
+    authBtn.classList.add("hidden");
+    refreshBtn.disabled = true;
+    browser.cookies.get({
+        url: COOKIE_URL,
+        name: COOKIE_NAME
+    }).then(cookie => {
+        if (cookie) {
+            cookieVal = JSON.parse(cookie.value)
+            loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
+        } else {
+            authBtn.classList.remove("hidden");
+        }
+    }, error => {
+        console.log(error);
+        authBtn.classList.remove("hidden");
+    });
+};
+
+authBtn.addEventListener("click", function () {
+    bgPage.authorize();
+});
+
 function MyListItem(commentsPostUrl, teams) {
     this.listElement = null;
     this.commentsPostUrl = commentsPostUrl;
@@ -6,8 +38,10 @@ function MyListItem(commentsPostUrl, teams) {
 }
 
 let postList = this.document.getElementById("posts");
-document.getElementById("refreshBtn").addEventListener('click', function() {
+let refreshBtn = document.getElementById("refreshBtn");
+refreshBtn.addEventListener('click', function() {
     while(postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
+    refreshBtn.disabled = true;
     browser.storage.local.remove(["time","posts"]).then(onLoaded, onError);
 });
 
@@ -80,6 +114,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
             );
         } else {
             if (config.loadStreams) loadStreamLinks(r, listItems);
+            refreshBtn.disabled = false;
         }
     }
 }
@@ -102,6 +137,7 @@ function loadFromStorage() {
 async function loadPosts(clientId, accessToken, refreshToken) {
     let lastTime = await browser.storage.local.get("time");
     if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
+        refreshBtn.disabled = false;
         loadFromStorage();
     } else {
         loadFromReddit(clientId, accessToken, refreshToken);

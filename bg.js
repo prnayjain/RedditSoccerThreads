@@ -1,44 +1,30 @@
+var config = {
+    clientId: "hdGbtiI3sBPzjw",
+    debug: false,
+    newPageLimit: 5,
+    timeThreshold: 120/*seconds*/,
+    loadStreams: true,
+    cookieUrl: "https://oauth.reddit.com/",
+    cookieName: "tokens"
+}
+
+let REDIRECT_URI = browser.identity.getRedirectURL();
+let COOKIE_URL = config.cookieUrl;
+let COOKIE_NAME = config.cookieName;
 let CLIENT_ID = config.clientId;
-let REDIRECT_URI = "http://lvh.me"
 
-let COOKIE_URL = "https://oauth.reddit.com/"
-let COOKIE_NAME = "tokens"
-
-let authBtn = document.getElementById("authBtn");
-
-window.addEventListener('load', onLoaded);
-function onLoaded() {
-    authBtn.classList.add("hidden");
-    browser.cookies.get({
-        url: COOKIE_URL,
-        name: COOKIE_NAME
-    }).then(cookie => {
-        if (cookie) {
-            cookieVal = JSON.parse(cookie.value)
-            loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
-        } else {
-            authBtn.classList.remove("hidden");
-        }
-    }, error => {
-        console.log(error);
-        authBtn.classList.remove("hidden");
-    });
-};
-
-authBtn.addEventListener("click", function () {
+function authorize() {
     let RANDOM_STRING = Math.random().toString(36).substring(2);
-    let authorize = browser.identity.launchWebAuthFlow(
-        {
-            url: "https://www.reddit.com/api/v1/authorize?" +
-                "client_id=" + CLIENT_ID +
-                "&response_type=code" +
-                "&state=" + RANDOM_STRING +
-                "&redirect_uri=http://lvh.me" +
-                "&duration=permanent" +
-                "&scope=identity+read",
-            interactive: true
-        }
-    );
+    let authorize = browser.identity.launchWebAuthFlow({
+        url: "https://www.reddit.com/api/v1/authorize?" +
+            "client_id=" + CLIENT_ID +
+            "&response_type=code" +
+            "&state=" + RANDOM_STRING +
+            "&redirect_uri=" + REDIRECT_URI +
+            "&duration=permanent" +
+            "&scope=identity+read",
+        interactive: true
+    });
     authorize.then(
         url => {
             console.log("I got the code!");
@@ -51,8 +37,8 @@ authBtn.addEventListener("click", function () {
                 XHR.addEventListener('load', event => {
                     console.log("got access token");
                     let responseObject = JSON.parse(XHR.response);
-                    let btn = document.getElementById("authBtn");
-                    btn.style.visibility = 'hidden';
+                    //let btn = document.getElementById("authBtn");
+                    //btn.style.visibility = 'hidden';
 
                     browser.cookies.set({
                         url: COOKIE_URL,
@@ -67,7 +53,7 @@ authBtn.addEventListener("click", function () {
                             console.log(error);
                         });
 
-                    loadPosts(CLIENT_ID, responseObject["access_token"], responseObject["refresh_token"]);
+                    //loadPosts(CLIENT_ID, responseObject["access_token"], responseObject["refresh_token"]);
                 });
 
                 XHR.addEventListener("error", event => {
@@ -90,4 +76,4 @@ authBtn.addEventListener("click", function () {
         },
         console.log
     );
-})
+}
