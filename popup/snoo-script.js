@@ -60,7 +60,7 @@ function displayCommentStreamPost(item) {
 
     let anchor = document.createElement('a');
     anchor.setAttribute("href", item.commentsPostUrl);
-    anchor.text = item.teams[0] + " | " + item.teams[1] + " ";
+    anchor.text = item.teams[0] + " | " + item.teams[1];
 
     postElement.appendChild(anchor);
     postList.appendChild(postElement);
@@ -73,7 +73,7 @@ function displayStreamPost(item) {
     anchor.setAttribute("href", item.streamPostUrl);
     anchor.text = "Streams";
     item.listElement.append(" ");
-    item.listelem.appendChild(anchor);
+    item.listElement.appendChild(anchor);
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
@@ -104,7 +104,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
             let title = normalize(element.title);
             let teams = getTeams(title);
             let item = new MyListItem(commentsPostUrl, teams);
-            item.postElement = displayCommentStreamPost(item);
+            item.listElement = displayCommentStreamPost(item);
             listItems.push(item);
         }
         if (count < config.newPageLimit) {
@@ -126,6 +126,7 @@ function loadFromStorage() {
             let parsed = JSON.parse(results.posts);
             for (let i = 0; i < parsed.length; i++) {
                 let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
+                if (parsed[i].streamPostUrl) item.streamPostUrl = parsed[i].streamPostUrl;
                 item.listElement = displayCommentStreamPost(item);
                 if (config.loadStreams) displayStreamPost(item);
             }
@@ -152,14 +153,14 @@ function loadStreamLinks(r, listItems) {
     r.getSubreddit('soccerstreams').getNew().then(
         posts => {
             for (const element of posts) {
+                let title = normalize(element.title);
                 for (let i = 0; i < listItems.length; i++) {
                     if (found[i]) continue;
                     let teams = listItems[i].teams;
-                    let title = normalize(element.title);
-                    if (title.includes(teams[0]) && title.includes(teams[1])) {
+                    if (title.includes(teams[0]) || title.includes(teams[1])) {
                         listItems[i].streamPostUrl = element.url;
                         found[i] = true;
-                        displayCommentStreamPost(listItems[i]);
+                        displayStreamPost(listItems[i]);
                     }
                 }
             }
@@ -171,10 +172,11 @@ function loadStreamLinks(r, listItems) {
 // Serialize all fields except 'listElement' which holds the list element in html
 function setInStorage(listItems) {
     browser.storage.local.set({ time: new Date().getTime() });
+    let stored = JSON.stringify(listItems, function replacer(key, value) {
+        return (key == "listElement") ? undefined : value;
+    });
     browser.storage.local.set({
-        posts: JSON.stringify(listItems, function replacer(key, value) {
-            return (key == "listElement") ? undefined : value;
-        })
+        posts: stored
     }).then(
         () => console.log("Storage done"),
         onError
@@ -205,7 +207,7 @@ function getTeam1(title) {
     let tmp = title.split("vs");
     if (tmp.length < 2) return "None";
     tmp = tmp[0].split(":");
-    if (tmp.length < 2) return "None";
+    if (tmp.length < 2) return tmp[0].trim();
     return tmp[1].trim();
 }
 
@@ -213,7 +215,7 @@ function getTeam2(title) {
     let tmp = title.split("vs");
     if (tmp.length < 2) return "None";
     tmp = tmp[1].split("[");
-    if (tmp.length < 2) return "None";
+    //if (tmp.length < 2) return "None";
     tmp = tmp[0].trim();
     if (tmp[0] == '.') tmp = tmp.substr(1);
     return tmp.trim();
