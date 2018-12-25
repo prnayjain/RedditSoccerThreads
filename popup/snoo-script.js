@@ -39,41 +39,20 @@ function MyListItem(commentsPostUrl, teams) {
 
 let postList = this.document.getElementById("posts");
 let refreshBtn = document.getElementById("refreshBtn");
-refreshBtn.addEventListener('click', function() {
-    while(postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
+refreshBtn.addEventListener('click', function () {
+    while (postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
     refreshBtn.disabled = true;
-    browser.storage.local.remove(["time","posts"]).then(onLoaded, onError);
+    browser.storage.local.remove(["time", "posts"]).then(onLoaded, onError);
 });
 
-// Remove accented characters
-// Change to lower case
-// Trim
-function normalize(title) {
-    return title.normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase().trim();
-}
-
-function displayCommentStreamPost(item) {
-    let postElement = this.document.createElement('li');
-    //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
-
-    let anchor = document.createElement('a');
-    anchor.setAttribute("href", item.commentsPostUrl);
-    anchor.text = item.teams[0] + " | " + item.teams[1];
-
-    postElement.appendChild(anchor);
-    postList.appendChild(postElement);
-    return postElement;
-}
-
-function displayStreamPost(item) {
-    if (!item.streamPostUrl) return;
-    let anchor = document.createElement('a');
-    anchor.setAttribute("href", item.streamPostUrl);
-    anchor.text = "Streams";
-    item.listElement.append(" ");
-    item.listElement.appendChild(anchor);
+async function loadPosts(clientId, accessToken, refreshToken) {
+    let lastTime = await browser.storage.local.get("time");
+    if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
+        refreshBtn.disabled = false;
+        loadFromStorage();
+    } else {
+        loadFromReddit(clientId, accessToken, refreshToken);
+    }
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
@@ -123,32 +102,6 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     }
 }
 
-function loadFromStorage() {
-    console.log("Loading from storage");
-    browser.storage.local.get("posts").then(
-        results => {
-            let parsed = JSON.parse(results.posts);
-            for (let i = 0; i < parsed.length; i++) {
-                let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
-                if (parsed[i].streamPostUrl) item.streamPostUrl = parsed[i].streamPostUrl;
-                item.listElement = displayCommentStreamPost(item);
-                if (config.loadStreams) displayStreamPost(item);
-            }
-        },
-        onError
-    );
-}
-
-async function loadPosts(clientId, accessToken, refreshToken) {
-    let lastTime = await browser.storage.local.get("time");
-    if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
-        refreshBtn.disabled = false;
-        loadFromStorage();
-    } else {
-        loadFromReddit(clientId, accessToken, refreshToken);
-    }
-}
-
 function loadStreamLinks(r, listItems) {
     let found = [];
     for (let i = 0; i < listItems.length; i++) {
@@ -173,6 +126,22 @@ function loadStreamLinks(r, listItems) {
         onError);
 }
 
+function loadFromStorage() {
+    console.log("Loading from storage");
+    browser.storage.local.get("posts").then(
+        results => {
+            let parsed = JSON.parse(results.posts);
+            for (let i = 0; i < parsed.length; i++) {
+                let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
+                if (parsed[i].streamPostUrl) item.streamPostUrl = parsed[i].streamPostUrl;
+                item.listElement = displayCommentStreamPost(item);
+                if (config.loadStreams) displayStreamPost(item);
+            }
+        },
+        onError
+    );
+}
+
 // Serialize all fields except 'listElement' which holds the list element in html
 function setInStorage(listItems) {
     browser.storage.local.set({ time: new Date().getTime() });
@@ -186,6 +155,37 @@ function setInStorage(listItems) {
         onError
     );
 
+}
+
+// Remove accented characters
+// Change to lower case
+// Trim
+function normalize(title) {
+    return title.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().trim();
+}
+
+function displayCommentStreamPost(item) {
+    let postElement = this.document.createElement('li');
+    //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
+
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.commentsPostUrl);
+    anchor.text = item.teams[0] + " | " + item.teams[1];
+
+    postElement.appendChild(anchor);
+    postList.appendChild(postElement);
+    return postElement;
+}
+
+function displayStreamPost(item) {
+    if (!item.streamPostUrl) return;
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.streamPostUrl);
+    anchor.text = "Streams";
+    item.listElement.append(" ");
+    item.listElement.appendChild(anchor);
 }
 
 function onError(error) {
