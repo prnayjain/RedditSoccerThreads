@@ -57,42 +57,16 @@ refreshBtn.addEventListener('click', function () {
     );
 });
 
-// Remove accented characters
-// Change to lower case
-// Trim
-function normalize(title) {
-    return title.normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase().trim();
-}
-
-function anchorToTab(anchor) {
-    anchor.onclick = function () {
-        chrome.tabs.create({active: true, url: anchor.href});
-    };
-}
-
-function displayCommentStreamPost(item) {
-    let postElement = this.document.createElement('li');
-    //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
-
-    let anchor = document.createElement('a');
-    anchor.setAttribute("href", item.commentsPostUrl);
-    anchor.text = item.teams[0] + " | " + item.teams[1];
-    anchorToTab(anchor);
-    postElement.appendChild(anchor);
-    postList.appendChild(postElement);
-    return postElement;
-}
-
-function displayStreamPost(item) {
-    if (!item.streamPostUrl) return;
-    let anchor = document.createElement('a');
-    anchor.setAttribute("href", item.streamPostUrl);
-    anchor.text = "Streams";
-    anchorToTab(anchor);
-    item.listElement.append(" ");
-    item.listElement.appendChild(anchor);
+function loadPosts(clientId, accessToken, refreshToken) {
+    chrome.storage.local.get("time",
+        lastTime => {
+            if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
+                refreshBtn.disabled = false;
+                loadFromStorage();
+            } else {
+                loadFromReddit(clientId, accessToken, refreshToken);
+            }
+        });
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
@@ -116,11 +90,15 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     function forEachLoad(posts, count) {
         //console.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
-            if (!element || !isMatchPost(element.title)) continue;
+            if (!element.title) continue;
 
+            let title = normalize(element.title);
+            if (!isMatchPost(element.title)) continue;
+
+            // change domain from reddit.com to reddit-stream.com
             let idx = element.url.indexOf("reddit") + 6;
             let commentsPostUrl = element.url.substr(0, idx) + "-stream" + element.url.substr(idx);
-            let title = normalize(element.title);
+
             let teams = getTeams(title);
             let item = new MyListItem(commentsPostUrl, teams);
             item.listElement = displayCommentStreamPost(item);
@@ -132,41 +110,14 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
                 onError
             );
         } else {
-            if (config.loadStreams) loadStreamLinks(r, listItems);
+            if (config.loadStreams) {
+                loadStreamLinks(r, listItems);
+            } else {
+                setInStorage(listItems);
+            }
             refreshBtn.disabled = false;
         }
     }
-}
-
-function loadFromStorage() {
-    console.log("Loading from storage");
-    chrome.storage.local.get("posts",
-        results => {
-            if (chrome.extension.lastError) {
-                console.log(chrome.extension.lastError);
-                return;
-            }
-            let parsed = JSON.parse(results.posts);
-            for (let i = 0; i < parsed.length; i++) {
-                let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
-                if (parsed[i].streamPostUrl) item.streamPostUrl = parsed[i].streamPostUrl;
-                item.listElement = displayCommentStreamPost(item);
-                if (config.loadStreams) displayStreamPost(item);
-            }
-        }
-    );
-}
-
-async function loadPosts(clientId, accessToken, refreshToken) {
-    let lastTime = chrome.storage.local.get("time",
-        lastTime => {
-            if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
-                refreshBtn.disabled = false;
-                loadFromStorage();
-            } else {
-                loadFromReddit(clientId, accessToken, refreshToken);
-            }
-        });
 }
 
 function loadStreamLinks(r, listItems) {
@@ -193,6 +144,25 @@ function loadStreamLinks(r, listItems) {
         onError);
 }
 
+function loadFromStorage() {
+    console.log("Loading from storage");
+    chrome.storage.local.get("posts",
+        results => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                return;
+            }
+            let parsed = JSON.parse(results.posts);
+            for (let i = 0; i < parsed.length; i++) {
+                let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
+                if (parsed[i].streamPostUrl) item.streamPostUrl = parsed[i].streamPostUrl;
+                item.listElement = displayCommentStreamPost(item);
+                if (config.loadStreams) displayStreamPost(item);
+            }
+        }
+    );
+}
+
 // Serialize all fields except 'listElement' which holds the list element in html
 function setInStorage(listItems) {
     chrome.storage.local.set({ time: new Date().getTime() });
@@ -212,6 +182,44 @@ function setInStorage(listItems) {
     );
 }
 
+// Remove accented characters
+// Change to lower case
+// Trim
+function normalize(title) {
+    return title.normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase().trim();
+}
+
+function anchorToTab(anchor) {
+    anchor.onclick = function () {
+        chrome.tabs.create({ active: true, url: anchor.href });
+    };
+}
+
+function displayCommentStreamPost(item) {
+    let postElement = this.document.createElement('li');
+    //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
+
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.commentsPostUrl);
+    anchor.text = item.teams[0] + " | " + item.teams[1];
+    anchorToTab(anchor);
+    postElement.appendChild(anchor);
+    postList.appendChild(postElement);
+    return postElement;
+}
+
+function displayStreamPost(item) {
+    if (!item.streamPostUrl) return;
+    let anchor = document.createElement('a');
+    anchor.setAttribute("href", item.streamPostUrl);
+    anchor.text = "Streams";
+    anchorToTab(anchor);
+    item.listElement.append(" ");
+    item.listElement.appendChild(anchor);
+}
+
 function onError(error) {
     console.log(error);
 }
@@ -224,8 +232,6 @@ function getTeams(title) {
 // "Match thread: 'Team 1' vs. 'Team2' [League Name]"
 
 function isMatchPost(postTitle) {
-    if (!postTitle) return false;
-    postTitle = normalize(postTitle);
     return (postTitle.indexOf("match thread") == 0) &&
         !postTitle.includes('request') &&
         postTitle.includes('vs');
