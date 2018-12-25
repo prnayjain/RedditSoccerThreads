@@ -1,4 +1,4 @@
-let bgPage = browser.extension.getBackgroundPage();
+let bgPage = chrome.extension.getBackgroundPage();
 let config = bgPage.config;
 let CLIENT_ID = config.clientId;
 let COOKIE_URL = config.cookieUrl;
@@ -10,20 +10,24 @@ window.addEventListener('load', onLoaded);
 function onLoaded() {
     authBtn.classList.add("hidden");
     refreshBtn.disabled = true;
-    browser.cookies.get({
+    chrome.cookies.get({
         url: COOKIE_URL,
         name: COOKIE_NAME
-    }).then(cookie => {
-        if (cookie) {
-            cookieVal = JSON.parse(cookie.value)
-            loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
-        } else {
-            authBtn.classList.remove("hidden");
-        }
-    }, error => {
-        console.log(error);
-        authBtn.classList.remove("hidden");
-    });
+    },
+        cookie => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                authBtn.classList.remove("hidden");
+            }
+            if (cookie) {
+                console.log("cookie present!");
+                console.log(cookie);
+                cookieVal = JSON.parse(cookie.value)
+                loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
+            } else {
+                authBtn.classList.remove("hidden");
+            }
+        });
 };
 
 authBtn.addEventListener("click", function () {
@@ -39,10 +43,18 @@ function MyListItem(commentsPostUrl, teams) {
 
 let postList = this.document.getElementById("posts");
 let refreshBtn = document.getElementById("refreshBtn");
-refreshBtn.addEventListener('click', function() {
-    while(postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
+refreshBtn.addEventListener('click', function () {
+    while (postList.childNodes.length > 0) postList.removeChild(postList.childNodes[0]);
     refreshBtn.disabled = true;
-    browser.storage.local.remove(["time","posts"]).then(onLoaded, onError);
+    chrome.storage.local.remove(["time", "posts"],
+        () => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                return;
+            }
+            onLoaded();
+        }
+    );
 });
 
 // Remove accented characters
@@ -121,8 +133,12 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
 
 function loadFromStorage() {
     console.log("Loading from storage");
-    browser.storage.local.get("posts").then(
+    chrome.storage.local.get("posts",
         results => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                return;
+            }
             let parsed = JSON.parse(results.posts);
             for (let i = 0; i < parsed.length; i++) {
                 let item = new MyListItem(parsed[i].commentsPostUrl, parsed[i].teams);
@@ -130,19 +146,20 @@ function loadFromStorage() {
                 item.listElement = displayCommentStreamPost(item);
                 if (config.loadStreams) displayStreamPost(item);
             }
-        },
-        onError
+        }
     );
 }
 
 async function loadPosts(clientId, accessToken, refreshToken) {
-    let lastTime = await browser.storage.local.get("time");
-    if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
-        refreshBtn.disabled = false;
-        loadFromStorage();
-    } else {
-        loadFromReddit(clientId, accessToken, refreshToken);
-    }
+    let lastTime = chrome.storage.local.get("time",
+        lastTime => {
+            if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
+                refreshBtn.disabled = false;
+                loadFromStorage();
+            } else {
+                loadFromReddit(clientId, accessToken, refreshToken);
+            }
+        });
 }
 
 function loadStreamLinks(r, listItems) {
@@ -171,17 +188,21 @@ function loadStreamLinks(r, listItems) {
 
 // Serialize all fields except 'listElement' which holds the list element in html
 function setInStorage(listItems) {
-    browser.storage.local.set({ time: new Date().getTime() });
+    chrome.storage.local.set({ time: new Date().getTime() });
     let stored = JSON.stringify(listItems, function replacer(key, value) {
         return (key == "listElement") ? undefined : value;
     });
-    browser.storage.local.set({
+    chrome.storage.local.set({
         posts: stored
-    }).then(
-        () => console.log("Storage done"),
-        onError
+    },
+        () => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                return;
+            }
+            console.log("Storage done")
+        }
     );
-
 }
 
 function onError(error) {

@@ -21,11 +21,5 @@
   },
   "background" : {
     "scripts": ["bg.js"]
-  },
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{73310ffe-a76a-48f5-bc80-ab1311773dcf}",
-      "strict_max_version": "64.*"
-    }
   }
 }

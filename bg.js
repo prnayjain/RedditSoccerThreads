@@ -1,5 +1,5 @@
 var config = {
-    clientId: "hdGbtiI3sBPzjw",
+    clientId: "Y7f3uoGkwoX3hw",
     debug: false,
     newPageLimit: 5,
     timeThreshold: 120/*seconds*/,
@@ -8,14 +8,14 @@ var config = {
     cookieName: "tokens"
 }
 
-let REDIRECT_URI = browser.identity.getRedirectURL();
+let REDIRECT_URI = chrome.identity.getRedirectURL();
 let COOKIE_URL = config.cookieUrl;
 let COOKIE_NAME = config.cookieName;
 let CLIENT_ID = config.clientId;
 
 function authorize() {
     let RANDOM_STRING = Math.random().toString(36).substring(2);
-    let authorize = browser.identity.launchWebAuthFlow({
+    chrome.identity.launchWebAuthFlow({
         url: "https://www.reddit.com/api/v1/authorize?" +
             "client_id=" + CLIENT_ID +
             "&response_type=code" +
@@ -24,9 +24,12 @@ function authorize() {
             "&duration=permanent" +
             "&scope=identity+read",
         interactive: true
-    });
-    authorize.then(
+    },
         url => {
+            if (chrome.extension.lastError) {
+                console.log(chrome.extension.lastError);
+                return;
+            }
             console.log("I got the code!");
             let state = url.slice(url.indexOf("state") + 6, url.indexOf("&"));
             if (state == RANDOM_STRING) {
@@ -40,19 +43,21 @@ function authorize() {
                     //let btn = document.getElementById("authBtn");
                     //btn.style.visibility = 'hidden';
 
-                    browser.cookies.set({
+                    chrome.cookies.set({
                         url: COOKIE_URL,
                         name: COOKIE_NAME,
                         value: JSON.stringify({
                             access_token: responseObject["access_token"],
                             refresh_token: responseObject["refresh_token"]
                         })
-                    }).then(result => { },
-                        error => {
-                            console.log("Couldnt save tokens");
-                            console.log(error);
-                        });
-
+                    },
+                        () => {
+                            if (chrome.extension.lastError) {
+                                console.log("Couldnt save tokens");
+                                console.log(error);
+                            }
+                        }
+                    );
                     //loadPosts(CLIENT_ID, responseObject["access_token"], responseObject["refresh_token"]);
                 });
 
@@ -73,7 +78,6 @@ function authorize() {
             } else {
                 console.log("state parameter was not same");
             }
-        },
-        console.log
+        }
     );
 }
