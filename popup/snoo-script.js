@@ -97,11 +97,15 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     function forEachLoad(posts, count) {
         //console.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
-            if (!element || !isMatchPost(element.title)) continue;
+            if (!element.title) continue;
 
+            let title = normalize(element.title);
+            if (isMatchPost(element.title)) continue;
+
+            // change domain from reddit.com to reddit-stream.com
             let idx = element.url.indexOf("reddit") + 6;
             let commentsPostUrl = element.url.substr(0, idx) + "-stream" + element.url.substr(idx);
-            let title = normalize(element.title);
+
             let teams = getTeams(title);
             let item = new MyListItem(commentsPostUrl, teams);
             item.listElement = displayCommentStreamPost(item);
@@ -196,8 +200,6 @@ function getTeams(title) {
 // "Match thread: 'Team 1' vs. 'Team2' [League Name]"
 
 function isMatchPost(postTitle) {
-    if (!postTitle) return false;
-    postTitle = normalize(postTitle);
     return (postTitle.indexOf("match thread") == 0) &&
         !postTitle.includes('request') &&
         postTitle.includes('vs');
