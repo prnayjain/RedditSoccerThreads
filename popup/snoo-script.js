@@ -66,6 +66,12 @@ function normalize(title) {
         .toLowerCase().trim();
 }
 
+function anchorToTab(anchor) {
+    anchor.onclick = function () {
+        chrome.tabs.create({active: true, url: anchor.href});
+    };
+}
+
 function displayCommentStreamPost(item) {
     let postElement = this.document.createElement('li');
     //postElement.textContent = item.teams[0] + " | " + item.teams[1] + " ";
@@ -73,7 +79,7 @@ function displayCommentStreamPost(item) {
     let anchor = document.createElement('a');
     anchor.setAttribute("href", item.commentsPostUrl);
     anchor.text = item.teams[0] + " | " + item.teams[1];
-
+    anchorToTab(anchor);
     postElement.appendChild(anchor);
     postList.appendChild(postElement);
     return postElement;
@@ -84,6 +90,7 @@ function displayStreamPost(item) {
     let anchor = document.createElement('a');
     anchor.setAttribute("href", item.streamPostUrl);
     anchor.text = "Streams";
+    anchorToTab(anchor);
     item.listElement.append(" ");
     item.listElement.appendChild(anchor);
 }
