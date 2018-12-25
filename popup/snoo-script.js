@@ -97,7 +97,11 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
                 onError
             );
         } else {
-            if (config.loadStreams) loadStreamLinks(r, listItems);
+            if (config.loadStreams) {
+                loadStreamLinks(r, listItems);
+            } else {
+                setInStorage(listItems);
+            }
             refreshBtn.disabled = false;
         }
     }
