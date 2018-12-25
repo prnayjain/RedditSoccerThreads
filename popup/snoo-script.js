@@ -45,14 +45,15 @@ refreshBtn.addEventListener('click', function () {
     browser.storage.local.remove(["time", "posts"]).then(onLoaded, onError);
 });
 
-async function loadPosts(clientId, accessToken, refreshToken) {
-    let lastTime = await browser.storage.local.get("time");
-    if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
-        refreshBtn.disabled = false;
-        loadFromStorage();
-    } else {
-        loadFromReddit(clientId, accessToken, refreshToken);
-    }
+function loadPosts(clientId, accessToken, refreshToken) {
+    let lastTime = browser.storage.local.get("time").then(lastTime => {
+        if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
+            refreshBtn.disabled = false;
+            loadFromStorage();
+        } else {
+            loadFromReddit(clientId, accessToken, refreshToken);
+        }
+    });
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
