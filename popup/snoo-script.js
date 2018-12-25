@@ -32,6 +32,7 @@ function onLoaded() {
 
 authBtn.addEventListener("click", function () {
     bgPage.authorize();
+    self.close();
 });
 
 function MyListItem(commentsPostUrl, teams) {
