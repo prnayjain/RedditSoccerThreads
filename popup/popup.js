@@ -21,7 +21,7 @@ function onLoaded() {
             authBtn.classList.remove("hidden");
         }
     }, error => {
-        console.log(error);
+        bgPage.log(error);
         authBtn.classList.remove("hidden");
     });
 };
@@ -57,7 +57,7 @@ function loadPosts(clientId, accessToken, refreshToken) {
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
-    console.log("Loading from reddit");
+    bgPage.log("Loading from reddit");
     const r = new snoowrap({
         userAgent: this.navigator.userAgent,
         clientId: clientId,
@@ -75,7 +75,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     );
 
     function forEachLoad(posts, count) {
-        //console.log("first post on page " + count + " is " + posts[0].title);
+        bgPage.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
             if (!element.title) continue;
 
@@ -132,7 +132,7 @@ function loadStreamLinks(r, listItems) {
 }
 
 function loadFromStorage() {
-    console.log("Loading from storage");
+    bgPage.log("Loading from storage");
     browser.storage.local.get("posts").then(
         results => {
             let parsed = JSON.parse(results.posts);
@@ -156,7 +156,7 @@ function setInStorage(listItems) {
     browser.storage.local.set({
         posts: stored
     }).then(
-        () => console.log("Storage done"),
+        () => bgPage.log("Storage done"),
         onError
     );
 
@@ -194,7 +194,7 @@ function displayStreamPost(item) {
 }
 
 function onError(error) {
-    console.log(error);
+    bgPage.log(error);
 }
 
 function getTeams(title) {
