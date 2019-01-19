@@ -1,6 +1,6 @@
 var config = {
     clientId: "R5xLAuhWGTARBw",
-    debug: true,
+    debug: false,
     newPageLimit: 5,
     timeThreshold: 0/*seconds*/,
     loadStreams: true,
