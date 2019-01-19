@@ -21,5 +21,8 @@
   },
   "background" : {
     "scripts": ["bg.js"]
-  }
+  },
+  "offline_enabled": false,
+  "short_name": "Soccer Threads"
+
 }
