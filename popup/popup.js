@@ -16,12 +16,12 @@ function onLoaded() {
     },
         cookie => {
             if (chrome.extension.lastError) {
-                console.log(chrome.extension.lastError);
+                bgPage.log(chrome.extension.lastError);
                 authBtn.classList.remove("hidden");
             }
             if (cookie) {
-                console.log("cookie present!");
-                console.log(cookie);
+                bgPage.log("cookie present!");
+                bgPage.log(cookie);
                 cookieVal = JSON.parse(cookie.value)
                 loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
             } else {
@@ -50,7 +50,7 @@ refreshBtn.addEventListener('click', function () {
     chrome.storage.local.remove(["time", "posts"],
         () => {
             if (chrome.extension.lastError) {
-                console.log(chrome.extension.lastError);
+                bgPage.log(chrome.extension.lastError);
                 return;
             }
             onLoaded();
@@ -71,7 +71,7 @@ function loadPosts(clientId, accessToken, refreshToken) {
 }
 
 function loadFromReddit(clientId, accessToken, refreshToken) {
-    console.log("Loading from reddit");
+    bgPage.log("Loading from reddit");
     const r = new snoowrap({
         userAgent: this.navigator.userAgent,
         clientId: clientId,
@@ -89,7 +89,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
     );
 
     function forEachLoad(posts, count) {
-        //console.log("first post on page " + count + " is " + posts[0].title);
+        bgPage.log("first post on page " + count + " is " + posts[0].title);
         for (const element of posts) {
             if (!element.title) continue;
 
@@ -146,11 +146,11 @@ function loadStreamLinks(r, listItems) {
 }
 
 function loadFromStorage() {
-    console.log("Loading from storage");
+    bgPage.log("Loading from storage");
     chrome.storage.local.get("posts",
         results => {
             if (chrome.extension.lastError) {
-                console.log(chrome.extension.lastError);
+                bgPage.log(chrome.extension.lastError);
                 return;
             }
             let parsed = JSON.parse(results.posts);
@@ -175,10 +175,10 @@ function setInStorage(listItems) {
     },
         () => {
             if (chrome.extension.lastError) {
-                console.log(chrome.extension.lastError);
+                bgPage.log(chrome.extension.lastError);
                 return;
             }
-            console.log("Storage done")
+            bgPage.log("Storage done")
         }
     );
 }
@@ -222,7 +222,7 @@ function displayStreamPost(item) {
 }
 
 function onError(error) {
-    console.log(error);
+    bgPage.log(error);
 }
 
 function getTeams(title) {
