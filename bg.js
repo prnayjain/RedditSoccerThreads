@@ -2,9 +2,8 @@ var config = {
     clientId: "hdGbtiI3sBPzjw",
     debug: false,
     newPageLimit: 5,
-    timeThreshold: 120/*seconds*/,
+    timeThreshold: 0/*seconds*/,
     loadStreams: true,
-    debug: false,
     cookieUrl: "https://oauth.reddit.com/",
     cookieName: "tokens"
 }
