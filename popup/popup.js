@@ -5,10 +5,12 @@ let COOKIE_URL = config.cookieUrl;
 let COOKIE_NAME = config.cookieName;
 
 let authBtn = document.getElementById("authBtn");
+let statusText = document.getElementById("status");
 
 window.addEventListener('load', onLoaded);
 function onLoaded() {
     authBtn.classList.add("hidden");
+    statusText.innerHTML = "";
     refreshBtn.disabled = true;
     browser.cookies.get({
         url: COOKIE_URL,
@@ -19,6 +21,7 @@ function onLoaded() {
             loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
         } else {
             authBtn.classList.remove("hidden");
+            statusText.innerHTML = "Please authenticate.";
         }
     }, error => {
         bgPage.log(error);
@@ -46,6 +49,7 @@ refreshBtn.addEventListener('click', function () {
 });
 
 function loadPosts(clientId, accessToken, refreshToken) {
+    statusText.innerHTML = "Loading...";
     let lastTime = browser.storage.local.get("time").then(lastTime => {
         if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
             refreshBtn.disabled = false;
@@ -97,12 +101,16 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
                 onError
             );
         } else {
-            if (config.loadStreams) {
-                loadStreamLinks(r, listItems);
-            } else {
-                setInStorage(listItems);
-            }
             refreshBtn.disabled = false;
+            if (listItems.length == 0) {
+                statusText.innerHTML = "No match threads found.";
+            } else {
+                if (config.loadStreams) {
+                    loadStreamLinks(r, listItems);
+                } else {
+                    setInStorage(listItems);
+                }
+            }
         }
     }
 }
@@ -142,6 +150,7 @@ function loadFromStorage() {
                 item.listElement = displayCommentStreamPost(item);
                 if (config.loadStreams) displayStreamPost(item);
             }
+            statusText.innerHTML = "";
         },
         onError
     );
@@ -156,10 +165,12 @@ function setInStorage(listItems) {
     browser.storage.local.set({
         posts: stored
     }).then(
-        () => bgPage.log("Storage done"),
+        () => {
+            bgPage.log("Storage done")
+            statusText.innerHTML = "";
+        },
         onError
     );
-
 }
 
 // Remove accented characters
