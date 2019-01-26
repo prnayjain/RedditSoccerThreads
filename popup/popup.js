@@ -80,7 +80,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
             if (!element.title) continue;
 
             let title = normalize(element.title);
-            if (!isMatchPost(element.title)) continue;
+            if (!isMatchPost(title)) continue;
 
             // change domain from reddit.com to reddit-stream.com
             let idx = element.url.indexOf("reddit") + 6;
