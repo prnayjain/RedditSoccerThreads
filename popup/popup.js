@@ -5,10 +5,12 @@ let COOKIE_URL = config.cookieUrl;
 let COOKIE_NAME = config.cookieName;
 
 let authBtn = document.getElementById("authBtn");
+let statusText = document.getElementById("status");
 
 window.addEventListener('load', onLoaded);
 function onLoaded() {
     authBtn.classList.add("hidden");
+    statusText.innerHTML = "";
     refreshBtn.disabled = true;
     chrome.cookies.get({
         url: COOKIE_URL,
@@ -25,6 +27,7 @@ function onLoaded() {
                 cookieVal = JSON.parse(cookie.value)
                 loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
             } else {
+                authBtn.classList.remove("hidden");
                 authBtn.classList.remove("hidden");
             }
         });
@@ -59,6 +62,7 @@ refreshBtn.addEventListener('click', function () {
 });
 
 function loadPosts(clientId, accessToken, refreshToken) {
+    statusText.innerHTML = "Loading...";
     chrome.storage.local.get("time",
         lastTime => {
             if (lastTime && (new Date().getTime() - lastTime.time) < config.timeThreshold/*seconds*/ * 1000) {
@@ -94,7 +98,7 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
             if (!element.title) continue;
 
             let title = normalize(element.title);
-            if (!isMatchPost(element.title)) continue;
+            if (!isMatchPost(title)) continue;
 
             // change domain from reddit.com to reddit-stream.com
             let idx = element.url.indexOf("reddit") + 6;
@@ -111,12 +115,16 @@ function loadFromReddit(clientId, accessToken, refreshToken) {
                 onError
             );
         } else {
-            if (config.loadStreams) {
-                loadStreamLinks(r, listItems);
-            } else {
-                setInStorage(listItems);
-            }
             refreshBtn.disabled = false;
+            if (listItems.length == 0) {
+                statusText.innerHTML = "No match threads found.";
+            } else {
+                if (config.loadStreams) {
+                    loadStreamLinks(r, listItems);
+                } else {
+                    setInStorage(listItems);
+                }
+            }
         }
     }
 }
@@ -126,9 +134,11 @@ function loadStreamLinks(r, listItems) {
     for (let i = 0; i < listItems.length; i++) {
         found.push(false);
     }
-    r.getSubreddit('soccerstreams').getNew().then(
+    let pl = r.getSubreddit('soccerstreams_pl').getNew();
+    let other = r.getSubreddit('soccerstreams_other').getNew();
+    Promise.all([pl, other]).then(
         posts => {
-            for (const element of posts) {
+            for (const element of posts[0].concat(posts[1])) {
                 let title = normalize(element.title);
                 for (let i = 0; i < listItems.length; i++) {
                     if (found[i]) continue;
@@ -160,6 +170,7 @@ function loadFromStorage() {
                 item.listElement = displayCommentStreamPost(item);
                 if (config.loadStreams) displayStreamPost(item);
             }
+            statusText.innerHTML = "";
         }
     );
 }
@@ -178,7 +189,8 @@ function setInStorage(listItems) {
                 bgPage.log(chrome.extension.lastError);
                 return;
             }
-            bgPage.log("Storage done")
+            bgPage.log("Storage done");
+            statusText.innerHTML = "";
         }
     );
 }
