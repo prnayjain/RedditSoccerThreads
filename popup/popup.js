@@ -28,7 +28,7 @@ function onLoaded() {
                 loadPosts(CLIENT_ID, cookieVal.access_token, cookieVal.refresh_token);
             } else {
                 authBtn.classList.remove("hidden");
-                authBtn.classList.remove("hidden");
+                statusText.innerHTML = "Please authenticate.";
             }
         });
 };
