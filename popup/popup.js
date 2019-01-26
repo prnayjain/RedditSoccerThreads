@@ -120,9 +120,11 @@ function loadStreamLinks(r, listItems) {
     for (let i = 0; i < listItems.length; i++) {
         found.push(false);
     }
-    r.getSubreddit('soccerstreams').getNew().then(
+    let pl = r.getSubreddit('soccerstreams_pl').getNew();
+    let other = r.getSubreddit('soccerstreams_other').getNew();
+    Promise.all([pl, other]).then(
         posts => {
-            for (const element of posts) {
+            for (const element of posts[0].concat(posts[1])) {
                 let title = normalize(element.title);
                 for (let i = 0; i < listItems.length; i++) {
                     if (found[i]) continue;
