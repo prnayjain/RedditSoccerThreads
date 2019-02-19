@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Reddit Soccer Threads",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Access soccer match threads from reddit",
   "icons": {
     "48": "icons/icon.png"
