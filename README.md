@@ -1,5 +1,5 @@
 # ReddditSoccerThreads
-Browser extension for accessing soccer match threads from reddit  
+Browser extension for accessing /r/soccer match threads  
   
 [/r/soccer](https://reddit.com/r/soccer) match threads,
 combined with [reddit-stream](https://reddit-stream.com/)'s ability,
@@ -11,7 +11,7 @@ Firefox addon:
 [https://addons.mozilla.org/en-US/firefox/addon/reddit-soccer-threads/](https://addons.mozilla.org/en-US/firefox/addon/reddit-soccer-threads/)
 
 Chrome web store:  
-[https://chrome.google.com/webstore/detail/reddit-soccer-threads/nidjimbehglhcdfmdpainfpmkcfceidg](https://chrome.google.com/webstore/detail/reddit-soccer-threads/nidjimbehglhcdfmdpainfpmkcfceidg)
+[https://chrome.google.com/webstore/detail/reddit-soccer-threads/gklbhaedbencbimiknkhnalncnnbblai](https://chrome.google.com/webstore/detail/reddit-soccer-threads/gklbhaedbencbimiknkhnalncnnbblai)
 
 Icon made by Freepik from [www.flaticon.com](https:flaticon.com)  
 Uses [snoowrap](https://github.com/not-an-aardvark/snoowrap)
