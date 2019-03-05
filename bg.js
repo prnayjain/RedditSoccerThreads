@@ -1,5 +1,5 @@
 var config = {
-    clientId: "hdGbtiI3sBPzjw",
+    clientId: "nKeuOcQWEIl2KA",
     debug: false,
     newPageLimit: 5,
     timeThreshold: 0/*seconds*/,
@@ -7,7 +7,6 @@ var config = {
     cookieUrl: "https://oauth.reddit.com/",
     cookieName: "tokens"
 }
-
 let REDIRECT_URI = browser.identity.getRedirectURL();
 let COOKIE_URL = config.cookieUrl;
 let COOKIE_NAME = config.cookieName;
