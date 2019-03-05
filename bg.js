@@ -3,7 +3,7 @@ var config = {
     debug: false,
     newPageLimit: 5,
     timeThreshold: 0/*seconds*/,
-    loadStreams: true,
+    loadStreams: false,
     cookieUrl: "https://oauth.reddit.com/",
     cookieName: "tokens"
 }
