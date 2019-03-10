@@ -5,7 +5,6 @@ Browser extension for accessing /r/soccer match threads
 combined with [reddit-stream](https://reddit-stream.com/)'s ability,
 are an amazing way to experience matches.
 This add-on lists the on-going matches so that they are just a click away.
-This also lists info from the [/r/soccerstreams](https://reddit.com/r/soccerstreams) page along the match threads.
 
 Firefox addon:  
 [https://addons.mozilla.org/en-US/firefox/addon/reddit-soccer-threads/](https://addons.mozilla.org/en-US/firefox/addon/reddit-soccer-threads/)
