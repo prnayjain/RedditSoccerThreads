@@ -12,5 +12,8 @@ Firefox addon:
 Chrome web store:  
 [https://chrome.google.com/webstore/detail/reddit-soccer-threads/gklbhaedbencbimiknkhnalncnnbblai](https://chrome.google.com/webstore/detail/reddit-soccer-threads/gklbhaedbencbimiknkhnalncnnbblai)
 
+/r/soccer announcement post:  
+[https://redd.it/azev16](https://redd.it/azev16)
+
 Icon made by Freepik from [www.flaticon.com](https:flaticon.com)  
 Uses [snoowrap](https://github.com/not-an-aardvark/snoowrap)
